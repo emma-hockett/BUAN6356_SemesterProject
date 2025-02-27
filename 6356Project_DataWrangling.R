@@ -31,9 +31,24 @@ HR_Employee_df <- HR_Employee_df[, !names(HR_Employee_df) %in% c("Employee_Count
 HR_Employee_df$Overtime <- ifelse(HR_Employee_df$Overtime == "Yes", 1, 0)
 HR_Employee_df$Attrition <- ifelse(HR_Employee_df$Attrition == "Yes", 1, 0)
 HR_Employee_df$Business_Travel <- ifelse(HR_Employee_df$Business_Travel == "Non-Travel", 0, ifelse(HR_Employee_df$Business_Travel == "Travel_Rarely", 1, 2))
+HR_Employee_df$Education <- ifelse(HR_Employee_df$Education == "Diploma", 0, ifelse(HR_Employee_df$Education == "Bachelors", 1, ifelse(HR_Employee_df$Education == "Masters", 2, 3)))
 
 # Changing the Job level from L7-L1 to just 7-1
 HR_Employee_df$Job_Level <- as.numeric(gsub("L", "", HR_Employee_df$Job_Level))
+
+# Turning the Department into Dummy Variables - "Sales" is category without column
+dummy_vars <- model.matrix(~ Department -1, data = HR_Employee_df)
+HR_Employee_df <- cbind(HR_Employee_df, dummy_vars)
+HR_Employee_df$Department <- NULL
+HR_Employee_df$DepartmentSales <- NULL
+names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentCorporate Functions"] <- "Dept_Corporate_Functions"
+names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentDelivery"] <- "Dept_Delivery"
+names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentHR"] <- "Dept_HR"
+names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentMarketing"] <- "Dept_Marketing"
+names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentProduct"] <- "Dept_Product"
+
+
+
 
 
 
@@ -45,6 +60,7 @@ HR_Employee_df[HR_Employee_df == ""] <- NA
 
 
 #Checking the completeness of the data
+dim(HR_Employee_df)
 colSums(is.na(HR_Employee_df))
 
 
