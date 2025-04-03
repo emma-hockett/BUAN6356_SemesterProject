@@ -28,8 +28,11 @@ colnames(Office_Codes_df) <- c("Office_Code", "City", "Province", "Country")
 HR_Employee_df <- HR_Employee_df[, !names(HR_Employee_df) %in% c("Employee_Count", "Over_18", "Standard_Hours", "Employee_Number")]
 
 # Changing some of the ordinal categorical data into ordinal numerical data
+HR_Employee_df$Gender <- ifelse(HR_Employee_df$Gender == "Female", 1, 0)
+names(HR_Employee_df)[colnames(HR_Employee_df) == "Gender"] <- "Female"
 HR_Employee_df$Overtime <- ifelse(HR_Employee_df$Overtime == "Yes", 1, 0)
 HR_Employee_df$Attrition <- ifelse(HR_Employee_df$Attrition == "Yes", 1, 0)
+HR_Employee_df$Marital_Status <- ifelse(HR_Employee_df$Marital_Status == "Single", 0, ifelse(HR_Employee_df$Marital_Status == "Married", 1, 2))
 HR_Employee_df$Business_Travel <- ifelse(HR_Employee_df$Business_Travel == "Non-Travel", 0, ifelse(HR_Employee_df$Business_Travel == "Travel_Rarely", 1, 2))
 HR_Employee_df$Education <- ifelse(HR_Employee_df$Education == "Diploma", 0, ifelse(HR_Employee_df$Education == "Bachelors", 1, ifelse(HR_Employee_df$Education == "Masters", 2, 3)))
 
@@ -48,7 +51,18 @@ names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentMarketing"] <- "Dept_M
 names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentProduct"] <- "Dept_Product"
 
 
-
+# Turning the Office Codes into a Dummy Variable 
+dummy_vars <- model.matrix(~ Office_Code - 1, data = HR_Employee_df)
+HR_Employee_df <- cbind(HR_Employee_df, dummy_vars)
+HR_Employee_df$Office_Code <- NULL
+HR_Employee_df$Office_CodeTOR <- NULL
+names(HR_Employee_df)[names(HR_Employee_df) == "Office_BOS"] <- "Office_BOS"
+names(HR_Employee_df)[names(HR_Employee_df) == "Office_NYC"] <- "Office_NYC"
+names(HR_Employee_df)[names(HR_Employee_df) == "Office_OTT"] <- "Office_OTT"
+names(HR_Employee_df)[names(HR_Employee_df) == "Office_CAL"] <- "Office_CAL"
+names(HR_Employee_df)[names(HR_Employee_df) == "Office_PHL"] <- "Office_PHL"
+names(HR_Employee_df)[names(HR_Employee_df) == "Office_MKM"] <- "Office_MKM"
+names(HR_Employee_df)[names(HR_Employee_df) == "Office_VAN"] <- "Office_VAN"
 
 
 
