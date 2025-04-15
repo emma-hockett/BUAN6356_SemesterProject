@@ -1,5 +1,10 @@
+################################################################################
+#
+# Data Cleaning / Preparation / Testing
+# Group 2: BUAN 6356.S01
+#
+################################################################################
 
-# Getting the Data frames set up correctly
 
 # Reading in the data from a raw formatted GitHub link
 Employee_Office_df <- read.csv("https://raw.githubusercontent.com/emma-hockett/BUAN6356_SemesterProject/refs/heads/main/Dataset/Employee_office_survey.csv")
@@ -52,8 +57,8 @@ names(HR_Employee_df)[names(HR_Employee_df) == "DepartmentProduct"] <- "Dept_Pro
 
 
 # Turning the Office Codes into a Dummy Variable 
-dummy_vars <- model.matrix(~ Office_Code - 1, data = HR_Employee_df)
-HR_Employee_df <- cbind(HR_Employee_df, dummy_vars)
+dummy_vars_office <- model.matrix(~ Office_Code - 1, data = HR_Employee_df)
+HR_Employee_df <- cbind(HR_Employee_df, dummy_vars_office)
 HR_Employee_df$Office_Code <- NULL
 HR_Employee_df$Office_CodeTOR <- NULL
 names(HR_Employee_df)[names(HR_Employee_df) == "Office_BOS"] <- "Office_BOS"
@@ -67,7 +72,7 @@ names(HR_Employee_df)[names(HR_Employee_df) == "Office_VAN"] <- "Office_VAN"
 
 
 
-# Checking the Data Quality
+##################### Testing Data Quality #####################################
 
 # Some of the Empty fields are stored as "" instead of NULL so converting those to NULL to get proper view of the data
 HR_Employee_df[HR_Employee_df == ""] <- NA
@@ -101,8 +106,3 @@ quantile(HR_Employee_df$Years_At_Company)
 
 # Checking logical requirements of the data 
 HR_Employee_df[HR_Employee_df$Attrition == "1" & is.na(HR_Employee_df$Leaving_Year)& is.na(HR_Employee_df$Relieving_Status)& is.na(HR_Employee_df$Reason)]
-
-
-
-
-
