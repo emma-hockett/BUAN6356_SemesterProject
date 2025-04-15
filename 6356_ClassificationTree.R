@@ -1,5 +1,11 @@
+################################################################################
+#
+# Classification Tree
+# Group 2: BUAN 6356.S01
+# 
+################################################################################
 
-# Installing the packages needed
+
 install.packages("caret")
 install.packages("gains")
 install.packages("rpart")
@@ -15,6 +21,7 @@ library(pROC)
 library(dplyr)
 library(smotefamily)
 
+##################### Data Preparation #########################################
 # Separating into test and training data 
 set.seed(123)
 train_indicies <- createDataPartition(HR_Employee_df$Attrition, p=0.8, list=FALSE)
@@ -33,6 +40,8 @@ combined_data <- rbind(train_data_smote$data, train_data_smote$syn_data)
 combined_data <- data.frame(combined_data, Attrition = combined_data$class)
 combined_data$class <- NULL
 
+
+################### Default / Full / Pruned Trees ##############################
 # Creating a default tree to look at
 set.seed(1)
 default_tree <- rpart(Attrition ~., data = combined_data, method = "class")
@@ -46,6 +55,9 @@ printcp(full_tree)
 pruned_tree <- prune(full_tree, cp =  0.00030626)
 prp(pruned_tree, type = 1, extra = 1, under = TRUE)
 
+
+
+###################### Classification Based Tree ###############################
 # Based on the decision tree 
 predicted_class <- predict(pruned_tree, test_data, type = "class")
 test_data$Attrition <- factor(test_data$Attrition, levels = c('0', '1'))
@@ -55,16 +67,17 @@ confusion_class
 sensitivity <- as.numeric(confusion_class$byClass['Sensitivity'])
 precision <- as.numeric(confusion_class$byClass['Pos Pred Value'])
 f1 <- 2*((precision * sensitivity) / (precision + sensitivity))
+f1
 
-
-# Accuracy: 0.984
-# Sensitivity: 0.9534
+# Accuracy: 0.9784
+# Sensitivity: 0.9286
 # Specificity: 0.9932
-# Precision: 0.9769
-# F1-Score: 0.9650
+# Precision: 0.9761
+# F1-Score: 0.9517
 
 
 
+####################### Probability Based Tree #################################
 # Approximately 24% of the data falls into the target class, so the use that as the cutoff 
 predicted_prob <- predict(pruned_tree, test_data, type= 'prob')
 predicted_class_prob <- factor(ifelse(predicted_prob[,2]>0.24, '1', '0'), levels = c('0', '1'))
@@ -74,16 +87,22 @@ confusion_prob
 sensitivity <- as.numeric(confusion_prob$byClass['Sensitivity'])
 precision <- as.numeric(confusion_prob$byClass['Pos Pred Value'])
 f1 <- 2*((precision * sensitivity) / (precision + sensitivity))
+f1
 
-# Accuracy: 0.984
-# Sensitivity: 0.9534
+# Accuracy: 0.9784
+# Sensitivity: 0.9286
 # Specificity: 0.9932
-# Precision: 0.9769
-# F1-Score: 0.9650
+# Precision: 0.9761
+# F1-Score: 0.9517
+
+roc_curve <- roc(test_data$Attrition, predicted_prob[,2])
+plot(roc_curve)
+optimal_cutoff <- coords(roc_curve, "best", ret = "threshold")
 
 
-# Plotting the ROC curve. Areas under the curve: 0.98
+# Plotting the ROC curve. Areas under the curve: 0.989
 roc_curve <- roc(test_data$Attrition, predicted_prob[,2])
 plot(roc_curve)
 auc(roc_curve)
+
 
