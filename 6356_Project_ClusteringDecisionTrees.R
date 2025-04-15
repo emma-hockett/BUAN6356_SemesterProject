@@ -1,4 +1,12 @@
-install.packages("cluster")
+################################################################################
+# 
+# Clustering Prior to Decision Trees 
+# Group 2: BUAN 6320.S01
+#
+################################################################################
+
+library(caret)
+library(rpart)
 library(cluster)
 library(dplyr)
 library(factoextra)
@@ -34,10 +42,11 @@ cluster_data <- combined_data %>% select(-Attrition)
 cluster_data1 <- scale(cluster_data[,1:40])
 
 
+############### Calculating Silhouette Scores of Ks ############################
 # Testing various values of k for k means clustering
 silhouette_scores <- numeric()
 
-for (k in 2:5){
+for (k in 2:10){
   set.seed(123)
   kmeans_result <- kmeans(cluster_data1, centers = k, nstart = 25)
   
@@ -48,10 +57,16 @@ for (k in 2:5){
   cat("Average silhouette for k = ", k, ":", silhouette_scores[k], "\n")
 }
 
+# k = 2 is the best option
 # Average silhouette for k = 2: 0.1295244
-# Average silhouette for k = 3: 0.6245679
-# Average silhouette for k = 4: 0.5413377
-# Average silhouette for k = 5: 0.5536875
+# Average silhouette for k = 3: 0.06245679
+# Average silhouette for k = 4: 0.05413377
+# Average silhouette for k = 5: 0.05536875
+# Average silhouette for k = 6: 0.0612255
+# Average silhouette for k = 7: 0.07399049
+# Average silhouette for k = 8: 0.08024458
+# Average silhouette for k = 9: 0.07514228
+# Average silhouette for k =10: 0.07273328
 
 
 # Classifying each of the records into its correct cluster
@@ -61,12 +76,12 @@ combined_data$Cluster <- k_means_result$cluster
 cluster1 <- combined_data[combined_data$Cluster == 1, ]
 cluster2 <- combined_data[combined_data$Cluster == 2, ]
 
-#################################################################################
+
+######################### Decision Trees #######################################
 # Cluster 1 Decision Tree
 set.seed(1)
 full_tree_cluster1 <- rpart(Attrition ~., data = cluster1, method = "class")
 printcp(full_tree_cluster1)
-
 pruned_tree_cluster1 <- prune(full_tree_cluster1, cp = 0.01)
 
 
@@ -75,8 +90,9 @@ set.seed(1)
 full_tree_cluster2 <- rpart(Attrition ~., data = cluster2, method = "class")
 printcp(full_tree_cluster2)
 pruned_tree_cluster2 <- prune(full_tree_cluster2, cp = 0.01)
-##################################################################################
 
+
+################## Assigning Test data to Clusters #############################
 # Assigning the test data to a cluster to know which decision tree to use 
 test_data <- test_data %>% mutate_if(is.character, as,factor) %>% mutate_if(is.factor, as.numeric)
 test_data_wo_Attrition <- test_data %>% select(-Attrition)
@@ -94,15 +110,14 @@ test_clusters <- apply(test_data_scaled, 1, function(x) {
 })
 
 test_data$Cluster <- test_clusters
-
-
 cluster1_test_data <- test_data[test_data$Cluster == 1,]
 cluster2_test_data <- test_data[test_data$Cluster == 2,]
 
 
+################ Making Predictions Through Decision Trees #####################
+# Making the predictions for the class based on the correct decision tree 
 cluster1_predictions <- predict(pruned_tree_cluster1, cluster1_test_data, type = "class")
 cluster2_predictions <- predict(pruned_tree_cluster2, cluster2_test_data, type = "class")
-
 
 combined_predictions <- c(cluster1_predictions, cluster2_predictions)
 cluster1_test_data$Predictions <- cluster1_predictions
@@ -115,12 +130,8 @@ combined_test_data$Attrition <- factor(combined_test_data$Attrition, levels = c(
 
 confusionMatrix(combined_predictions, combined_test_data$Attrition, positive = "1")
 
+# Accuracy: 0.9613
+# Sensitivity: 0.8682
+# Specificity: 0.9893
+# Precision: 0.9609
 
-
-cluster1_predictions <- factor(cluster1_predictions, levels = c("0", "1"))
-cluster1_test_data$Attrition <- factor(cluster1_test_data$Attrition, levels = c("0", "1"))
-confusionMatrix(cluster1_predictions, cluster1_test_data$Attrition, positive = "1")
-
-cluster2_predictions <- factor(cluster2_predictions, levels = c("0", "1"))
-cluster2_test_data$Attrition <- factor(cluster2_test_data$Attrition, levels = c("0", "1"))
-confusionMatrix(cluster2_predictions, cluster2_test_data$Attrition, positive = "1")
