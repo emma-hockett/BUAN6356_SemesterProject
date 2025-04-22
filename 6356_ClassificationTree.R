@@ -5,7 +5,6 @@
 # 
 ################################################################################
 
-
 install.packages("caret")
 install.packages("gains")
 install.packages("rpart")
@@ -23,6 +22,7 @@ library(smotefamily)
 
 ##################### Data Preparation #########################################
 # Separating into test and training data 
+# Some culumns have to be excluded because they should play not affect on the decision process
 set.seed(123)
 train_indicies <- createDataPartition(HR_Employee_df$Attrition, p=0.8, list=FALSE)
 train_data_full <- HR_Employee_df[train_indicies, ]
@@ -47,6 +47,7 @@ set.seed(1)
 default_tree <- rpart(Attrition ~., data = combined_data, method = "class")
 prp(default_tree, type = 1, extra = 1, under = TRUE)
 
+# Creating the full tree to find the optimal CP value for the best pruned tree
 full_tree <- rpart(Attrition ~ ., data = combined_data, method = "class", cp = 0, minsplit = 2, minbucket = 1)
 prp(full_tree, type = 1, extra = 1, under = TRUE)
 printcp(full_tree)
@@ -58,7 +59,7 @@ prp(pruned_tree, type = 1, extra = 1, under = TRUE)
 
 
 ###################### Classification Based Tree ###############################
-# Based on the decision tree 
+# Based on the pruned tree, finding the performance measures 
 predicted_class <- predict(pruned_tree, test_data, type = "class")
 test_data$Attrition <- factor(test_data$Attrition, levels = c('0', '1'))
 confusion_class <- confusionMatrix(predicted_class, test_data$Attrition, positive = "1")
@@ -79,6 +80,7 @@ f1
 
 ####################### Probability Based Tree #################################
 # Approximately 24% of the data falls into the target class, so the use that as the cutoff 
+# Finding th performance meaures for the probability based tree 
 predicted_prob <- predict(pruned_tree, test_data, type= 'prob')
 predicted_class_prob <- factor(ifelse(predicted_prob[,2]>0.24, '1', '0'), levels = c('0', '1'))
 confusion_prob <- confusionMatrix(predicted_class_prob, test_data$Attrition, positive = '1')
@@ -95,6 +97,7 @@ f1
 # Precision: 0.9761
 # F1-Score: 0.9517
 
+# Plotting the ROC curve and finding the area under the curve
 roc_curve <- roc(test_data$Attrition, predicted_prob[,2])
 plot(roc_curve)
 optimal_cutoff <- coords(roc_curve, "best", ret = "threshold")
@@ -104,5 +107,15 @@ optimal_cutoff <- coords(roc_curve, "best", ret = "threshold")
 roc_curve <- roc(test_data$Attrition, predicted_prob[,2])
 plot(roc_curve)
 auc(roc_curve)
+
+
+################### Rules for Target Class #####################################
+# To view the rules that resulted in an Attrition value of 1
+
+node_info <- pruned_tree$frame
+target_nodes <- as.numeric(rownames(node_info[node_info$yval == 2 & node_info$var == "<leaf>",  ]))
+rules <- path.rpart(pruned_tree, nodes = target_nodes)
+for(r in rules){cat("Rule : \n", paste(r, collapse = " & "), "\n\n")}
+
 
 
