@@ -3,8 +3,13 @@
 # Clustering Prior to Decision Trees 
 # Group 2: BUAN 6320.S01
 #
+# This did not end up being a better approach to the classification trees.
+# Do not have to run this one, just wanted to show the process.
+#
 ################################################################################
 
+
+# Installing the correct packages 
 library(caret)
 library(rpart)
 library(cluster)
@@ -14,6 +19,7 @@ library(smotefamily)
 
 suppressWarnings(RNGversion("3.5.3"))
 
+# Some small data modifications to work better with the clustering analysis.
 # Turning Marital status from ordinal to dummy variable 
 Employee_Data <- HR_Employee_df
 Employee_Data$Marital_Stat_Single <- ifelse(Employee_Data$Marital_Status == 0, 1, 0)
