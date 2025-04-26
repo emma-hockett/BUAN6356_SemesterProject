@@ -6,14 +6,14 @@
 ################################################################################
 
 
-# Reading in the data from a raw formatted GitHub link
+# Reading in the data from a raw formatted GitHub link so that the datasets don't have to be downloaded prior
 Employee_Office_df <- read.csv("https://raw.githubusercontent.com/emma-hockett/BUAN6356_SemesterProject/refs/heads/main/Dataset/Employee_office_survey.csv")
 HR_Employee_df <- read.csv("https://raw.githubusercontent.com/emma-hockett/BUAN6356_SemesterProject/refs/heads/main/Dataset/HR%20Employee%20data.csv")
 Job_Position_df <- read.csv("https://raw.githubusercontent.com/emma-hockett/BUAN6356_SemesterProject/refs/heads/main/Dataset/Job_position_structure.csv")
 Office_Codes_df <- read.csv("https://raw.githubusercontent.com/emma-hockett/BUAN6356_SemesterProject/refs/heads/main/Dataset/Office_codes.csv")
 
 
-# Renaming the columns in the data frames to reflect the features
+# Renaming the columns in the data frames to better support the programming later
 colnames(Employee_Office_df) <- c("Employee_ID", "Office_Code", "Rated_Year", "Rating")
 colnames(HR_Employee_df) <- c("Employee_ID", "Joining_Year", "Age", "Business_Travel", "Daily_Rate", "Department", 
                               "Distance_From_Home", "Education","Employee_Count", "Employee_Number", "Environment_Satisfaction",
@@ -29,7 +29,7 @@ colnames(Office_Codes_df) <- c("Office_Code", "City", "Province", "Country")
 
 # Cleaning up some of the Data
 
-# Dropping the Employee Name which is constant across all employees
+# Dropping some columns which is constant across all employees and therefore will not be beneficial 
 HR_Employee_df <- HR_Employee_df[, !names(HR_Employee_df) %in% c("Employee_Count", "Over_18", "Standard_Hours", "Employee_Number")]
 
 # Changing some of the ordinal categorical data into ordinal numerical data
@@ -73,6 +73,7 @@ names(HR_Employee_df)[names(HR_Employee_df) == "Office_VAN"] <- "Office_VAN"
 
 
 ##################### Testing Data Quality #####################################
+# Testing the data quality across several different variations
 
 # Some of the Empty fields are stored as "" instead of NULL so converting those to NULL to get proper view of the data
 HR_Employee_df[HR_Employee_df == ""] <- NA
@@ -88,6 +89,7 @@ any(duplicated(HR_Employee_df))
 
 
 #Checking the validity of various columns to make sure they fit make sense
+# For example, looking at the quantile for numerical variables to ensure they would make sense in the probelm.
 
 # Making sure the ages make sense 
 min(HR_Employee_df$Age)
